@@ -10,15 +10,20 @@ import UIKit
 import MBProgressHUD
 
 // Main ViewController
-class RepoResultsViewController: UIViewController {
+class RepoResultsViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
 
     var searchBar: UISearchBar!
     var searchSettings = GithubRepoSearchSettings()
 
-    var repos: [GithubRepo]!
+    var repos: [GithubRepo]! = []
 
+    @IBOutlet weak var tableView: UITableView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        tableView.delegate = self
+        tableView.dataSource = self
 
         // Initialize the UISearchBar
         searchBar = UISearchBar()
@@ -42,13 +47,39 @@ class RepoResultsViewController: UIViewController {
 
             // Print the returned repositories to the output window
             for repo in newRepos {
-                print(repo)
-            }   
+                //print(repo)
+                self.repos.append(repo)
+            }
 
+            self.tableView.reloadData()
+            
             MBProgressHUD.hideHUDForView(self.view, animated: true)
             }, error: { (error) -> Void in
                 print(error)
         })
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return repos.count ?? 0
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        
+        let cell = tableView.dequeueReusableCellWithIdentifier("RepoCell", forIndexPath: indexPath) as! RepoCell
+        let repo = repos[indexPath.row]
+        
+        cell.userNameLabel.text = repo.ownerHandle
+        cell.repoName.text = repo.name
+        cell.descriptionLabel.text = repo.repoDescription
+        cell.avatarImageView.setImageWithURL(NSURL(string: repo.ownerAvatarURL!)!)
+        cell.starImageView.image = UIImage(named: "star")
+        cell.forkImageView.image = UIImage(named: "fork")
+        cell.numOfForksLabel.text = String(repo.forks!)
+        cell.numOfStarsLabel.text = String(repo.stars!)
+        
+//        tableView.reloadData()
+        
+        return cell
     }
 }
 
